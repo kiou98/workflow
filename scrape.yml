@@ -1,0 +1,38 @@
+name: Scrape NC Tenders (cron)
+
+on:
+  schedule:
+    # Tous les jours à 07:15 (heure UTC). Ajuste si besoin.
+    - cron: "15 20 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 python-dateutil tqdm supabase
+
+      # (Optionnel) Playwright si un site est 100% dynamique — décommente si tu l'utilises
+      # - name: Install Playwright
+      #   run: |
+      #     pip install playwright
+      #     python -m playwright install --with-deps chromium
+
+      - name: Run scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python extract_nc_tenders.py
